@@ -5,7 +5,6 @@ extends Control
 ## Administra la cuadrícula de tarjetas, la navegación por teclado y ratón,
 ## la prevención de cierres no deseados y la interacción con GameScanner y GameLauncher.
 
-const SunOfMayScript = preload("res://scripts/sun_of_may.gd")
 const GameScannerScript = preload("res://scripts/game_scanner.gd")
 const IconManagerScript = preload("res://scripts/icon_manager.gd")
 const GameLauncherScript = preload("res://scripts/game_launcher.gd")
@@ -13,15 +12,15 @@ const GameCardScript = preload("res://scripts/game_card.gd")
 
 @export var card_scene: PackedScene = preload("res://scenes/game_card.tscn")
 
-# Nodos de la interfaz
+# Nodos de la interfaz (con resolución segura para permitir personalizaciones visuales de la escena)
 @onready var grid_container: GridContainer = %GridContainer
 @onready var scroll_container: ScrollContainer = %ScrollContainer
 @onready var empty_state: Control = %EmptyState
-@onready var status_label: Label = %StatusLabel
-@onready var games_count_label: Label = %GamesCountLabel
 @onready var toast_panel: PanelContainer = %ToastPanel
 @onready var toast_label: Label = %ToastLabel
-@onready var background_sun: Control = %BackgroundSun
+@onready var status_label: Label = get_node_or_null("%StatusLabel")
+@onready var games_count_label: Label = get_node_or_null("%GamesCountLabel")
+@onready var background_sun: Control = get_node_or_null("%BackgroundSun")
 
 var game_launcher: Node
 var _detected_games: Array[Dictionary] = []
@@ -30,8 +29,8 @@ var _config_overrides: Dictionary = {}
 var _toast_tween: Tween
 
 func _ready() -> void:
-	# 1. Configurar modo Kiosco y restricciones de ventana
-	_setup_kiosk_mode()
+	# 1. Configurar modo de ventana y permitir cierre limpio desde la barra de tareas o Alt+F4
+	_setup_window_mode()
 
 	# 2. Instanciar gestor de ejecución de juegos
 	game_launcher = GameLauncherScript.new()
@@ -53,33 +52,43 @@ func _ready() -> void:
 	_load_optional_config()
 	refresh_library()
 
-## Configura el launcher en pantalla completa sin bordes y bloquea el cierre accidental
-func _setup_kiosk_mode() -> void:
-	# Establecer modo de pantalla completa sin bordes en Windows
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+## Configura la ventana del launcher permitiendo cierre ordenado desde el sistema operativo
+func _setup_window_mode() -> void:
+	# Establecer modo de pantalla completa estándar para una experiencia de arcade inmersiva
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	
-	# Evitar que Godot cierre la aplicación automáticamente al recibir NOTIFICATION_WM_CLOSE_REQUEST
+	# Manejar NOTIFICATION_WM_CLOSE_REQUEST manualmente para cerrar ordenadamente
 	get_tree().set_auto_accept_quit(false)
 	
-	print("Launcher: Modo Kiosco activado (Pantalla completa sin bordes, auto_accept_quit desactivado).")
+	print("Launcher: Ventana iniciada en pantalla completa. Cierre habilitado (Alt+F4 o Barra de Tareas).")
 
 ## Intercepta notificaciones del sistema operativo
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		# Bloquea intentos de cierre de ventana externos (como Alt+F4)
-		print("Launcher: Solicitud de cierre de ventana interceptada. El launcher permanece activo.")
-		show_toast("Modo Kiosco activo: La aplicación no permite cierre directo.")
+		# Permite cerrar desde la barra de tareas (clic derecho -> Cerrar ventana) o Alt+F4
+		print("Launcher: Solicitud de cierre de ventana recibida (Barra de tareas / Alt+F4).")
+		_close_launcher()
+
+## Cierra limpiamente el launcher
+func _close_launcher() -> void:
+	print("Launcher: Cerrando aplicación...")
+	get_tree().quit()
 
 ## Captura de eventos de teclado
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var key_event = event as InputEventKey
 		if key_event.pressed:
-			# Bloquear la tecla Escape para que no cierre la aplicación
+			# Alt+F4: Cerrar el launcher inmediatamente
+			if key_event.keycode == KEY_F4 and key_event.alt_pressed:
+				get_viewport().set_input_as_handled()
+				_close_launcher()
+				return
+
+			# Tecla Escape: Permite salir del launcher
 			if key_event.keycode == KEY_ESCAPE:
 				get_viewport().set_input_as_handled()
-				print("Launcher: Tecla Escape interceptada (no se permite salir).")
+				_close_launcher()
 				return
 			
 			# Tecla F5: Actualizar biblioteca
@@ -106,8 +115,8 @@ func _load_optional_config() -> void:
 	if file:
 		var json_text = file.get_as_text()
 		var parsed = JSON.parse_string(json_text)
-		if parsed is Dictionary and parsed.has("games"):
-			_config_overrides = parsed["games"]
+		if parsed is Dictionary:
+			_config_overrides = parsed
 			print("Launcher: Configuración opcional cargada exitosamente.")
 
 ## Escanea carpetas y regenera las tarjetas de la interfaz

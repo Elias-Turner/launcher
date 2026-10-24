@@ -50,35 +50,77 @@ static func get_base_directory() -> String:
 		# En la distribución exportada, la carpeta donde reside el Launcher.exe
 		return OS.get_executable_path().get_base_dir()
 
-## Escanea el directorio base buscando carpetas de juegos
-static func scan_games(custom_base_path: String = "", config_overrides: Dictionary = {}) -> Array[Dictionary]:
-	var base_path = custom_base_path
-	if base_path.is_empty():
-		base_path = get_base_directory()
+## Obtiene el directorio donde residen las carpetas de los videojuegos.
+## Por especificación, el launcher y la carpeta de los juegos deben estar al mismo nivel (carpetas hermanas).
+## Prioridad de búsqueda:
+## 1. custom_path (si se pasa explícitamente, ej. suite de pruebas)
+## 2. launcher_config.json -> campo "games_folder" o "games_directory"
+## 3. Carpeta hermana al mismo nivel que el launcher (../games, ../juegos, ../Games, ../Juegos)
+## 4. Carpeta interna de compatibilidad (./games, ./juegos)
+## 5. Directorio base del launcher como fallback
+static func get_games_directory(custom_path: String = "", config_overrides: Dictionary = {}) -> String:
+	if not custom_path.is_empty():
+		return custom_path.simplify_path().replace("\\", "/")
 
+	var base_dir = get_base_directory().replace("\\", "/")
+
+	# 1. Configuración explícita en launcher_config.json
+	var config_folder = config_overrides.get("games_folder", config_overrides.get("games_directory", ""))
+	if not config_folder.is_empty():
+		var explicit_path = config_folder
+		if not config_folder.is_absolute_path():
+			explicit_path = base_dir.path_join(config_folder)
+		explicit_path = explicit_path.simplify_path().replace("\\", "/")
+		if DirAccess.dir_exists_absolute(explicit_path):
+			return explicit_path
+
+	# 2. Carpeta hermana al mismo nivel que el launcher
+	for sibling_name in ["../games", "../juegos", "../Games", "../Juegos"]:
+		var sibling_path = base_dir.path_join(sibling_name).simplify_path().replace("\\", "/")
+		if DirAccess.dir_exists_absolute(sibling_path):
+			return sibling_path
+
+	# 3. Carpeta interna como alternativa
+	for internal_name in ["games", "juegos", "sample_games"]:
+		var internal_path = base_dir.path_join(internal_name).simplify_path().replace("\\", "/")
+		if DirAccess.dir_exists_absolute(internal_path):
+			return internal_path
+
+	# 4. Por defecto: retorna la carpeta hermana ../games (creándola si no existe)
+	var default_sibling = base_dir.path_join("../games").simplify_path().replace("\\", "/")
+	return default_sibling
+
+## Escanea el directorio de juegos buscando las sub-carpetas de cada juego
+static func scan_games(custom_base_path: String = "", config_overrides: Dictionary = {}) -> Array[Dictionary]:
+	var target_dir_path = get_games_directory(custom_base_path, config_overrides)
 	var games: Array[Dictionary] = []
 	var launcher_exe_path = OS.get_executable_path().replace("\\", "/").to_lower()
+	var games_map = config_overrides.get("games", config_overrides)
 
-	var dir = DirAccess.open(base_path)
+	# Si la carpeta hermana no existe aún, crearla automáticamente para facilidad del usuario
+	if not DirAccess.dir_exists_absolute(target_dir_path):
+		DirAccess.make_dir_recursive_absolute(target_dir_path)
+
+	var dir = DirAccess.open(target_dir_path)
 	if not dir:
-		push_warning("GameScanner: No se pudo abrir el directorio base: " + base_path)
+		push_warning("GameScanner: No se pudo abrir el directorio de juegos: " + target_dir_path)
 		return games
 
 	dir.list_dir_begin()
 	var item_name = dir.get_next()
 
-	# Recorrer los elementos en el directorio base
+	# Recorrer las sub-carpetas en el directorio de juegos (cada sub-carpeta es un juego)
 	while not item_name.is_empty():
 		if dir.current_is_dir() and not item_name.begins_with("."):
 			var lower_name = item_name.to_lower()
 			
 			# Verificar si la carpeta está excluida por lista negra o por configuración
 			if not lower_name in IGNORED_DIRECTORIES:
-				var folder_override = config_overrides.get(item_name, {})
+				var folder_override = games_map.get(item_name, {})
 				var is_excluded = folder_override.get("exclude", false)
 				
 				if not is_excluded:
-					var full_folder_path = base_path.path_join(item_name).replace("\\", "/")
+					var full_folder_path = target_dir_path.path_join(item_name).replace("\\", "/")
 					var game_entry = _process_game_folder(item_name, full_folder_path, launcher_exe_path, folder_override)
 					if not game_entry.is_empty():
 						games.append(game_entry)
@@ -86,11 +128,13 @@ static func scan_games(custom_base_path: String = "", config_overrides: Dictiona
 		item_name = dir.get_next()
 	dir.list_dir_end()
 
-	# Si estamos en el editor y existe una carpeta "sample_games" o "juegos", revisarla también para facilitar pruebas
-	if OS.has_feature("editor"):
+	# Si no se encontraron juegos en la carpeta principal de juegos y estamos usando la ruta predeterminada,
+	# verificar también si hay carpetas de juegos de prueba directamente en el entorno de desarrollo
+	if games.is_empty() and custom_base_path.is_empty() and OS.has_feature("editor"):
+		var base_dir = get_base_directory().replace("\\", "/")
 		for test_subfolder in ["sample_games", "juegos", "games"]:
-			var test_dir_path = base_path.path_join(test_subfolder).replace("\\", "/")
-			if DirAccess.dir_exists_absolute(test_dir_path):
+			var test_dir_path = base_dir.path_join(test_subfolder).replace("\\", "/")
+			if DirAccess.dir_exists_absolute(test_dir_path) and test_dir_path != target_dir_path:
 				var sub_dir = DirAccess.open(test_dir_path)
 				if sub_dir:
 					sub_dir.list_dir_begin()
@@ -98,11 +142,10 @@ static func scan_games(custom_base_path: String = "", config_overrides: Dictiona
 					while not sub_item.is_empty():
 						if sub_dir.current_is_dir() and not sub_item.begins_with("."):
 							var full_sub_path = test_dir_path.path_join(sub_item).replace("\\", "/")
-							var folder_override = config_overrides.get(sub_item, {})
+							var folder_override = games_map.get(sub_item, {})
 							if not folder_override.get("exclude", false):
 								var game_entry = _process_game_folder(sub_item, full_sub_path, launcher_exe_path, folder_override)
 								if not game_entry.is_empty():
-									# Evitar duplicados por nombre
 									var already_exists = false
 									for g in games:
 										if g["name"].to_lower() == game_entry["name"].to_lower():

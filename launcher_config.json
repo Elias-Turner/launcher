@@ -1,5 +1,6 @@
 {
-  "_comentario": "Archivo de configuración opcional para el Launcher Argentino. Permite personalizar el comportamiento de carpetas específicas sin modificar código.",
+  "_comentario": "Archivo de configuración para el Launcher. 'games_folder' indica la carpeta de los juegos al mismo nivel que el launcher.",
+  "games_folder": "../games",
   "games": {
     "Ejemplo_Personalizado": {
       "display_name": "Mi Juego Favorito",

@@ -1,0 +1,8 @@
+res://scenes/launcher.tscn
+res://scripts/game_card.gd
+res://scripts/game_launcher.gd
+res://scripts/game_scanner.gd
+res://scripts/icon_manager.gd
+res://scripts/launcher.gd
+res://tests/test_launcher_suite.gd
+res://scenes/game_card.tscn

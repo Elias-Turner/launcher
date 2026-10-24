@@ -1,47 +1,37 @@
 [gd_scene format=3 uid="uid://c6f3q18k8m4y2"]
 
-[ext_resource type="Script" path="res://scripts/game_card.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://b2vxxp2gyjt20" path="res://scripts/game_card.gd" id="1_card"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_spacer"]
-
-[node name="GameCard" type="PanelContainer"]
+[node name="GameCard" type="PanelContainer" unique_id=1904999963]
 custom_minimum_size = Vector2(250, 240)
 offset_right = 250.0
 offset_bottom = 240.0
 pivot_offset = Vector2(125, 120)
 focus_mode = 2
-mouse_filter = 0
 script = ExtResource("1_card")
 
-[node name="CardVBox" type="VBoxContainer" parent="."]
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="." unique_id=169680246]
+layout_mode = 2
+
+[node name="CardVBox" type="VBoxContainer" parent="AspectRatioContainer" unique_id=174210417]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="IconCenter" type="CenterContainer" parent="CardVBox"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="IconRect" type="TextureRect" parent="CardVBox/IconCenter"]
+[node name="IconRect" type="TextureRect" parent="AspectRatioContainer/CardVBox" unique_id=971866169]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
+custom_minimum_size = Vector2(250, 200)
 layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
 expand_mode = 1
-stretch_mode = 5
+stretch_mode = 6
 
-[node name="Spacer" type="Panel" parent="CardVBox"]
-custom_minimum_size = Vector2(0, 4)
-layout_mode = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxEmpty_spacer")
-
-[node name="NameLabel" type="Label" parent="CardVBox"]
+[node name="NameLabel" type="Label" parent="AspectRatioContainer/CardVBox" unique_id=598339852]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(210, 48)
 layout_mode = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
 theme_override_font_sizes/font_size = 17
 text = "Nombre del Videojuego"

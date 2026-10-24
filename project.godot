@@ -14,7 +14,7 @@ config/name="Launcher Argentino"
 config/description="Launcher de videojuegos estilo consola para Windows con temática de la Bandera Argentina y modo kiosco."
 config/version="1.0.0"
 run/main_scene="res://scenes/launcher.tscn"
-config/features=PackedStringArray("4.7", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://assets/icons/default_game_icon.svg"
 
 [display]

@@ -10,11 +10,16 @@ signal card_focused(game_info: Dictionary)
 
 @onready var icon_rect: TextureRect = %IconRect
 @onready var name_label: Label = %NameLabel
+@onready var aspectRatio: AspectRatioContainer = $AspectRatioContainer
 
 var game_info: Dictionary = {}
 var _is_hovered: bool = false
 var _is_focused: bool = false
 var _tween: Tween
+
+var _style_normal: StyleBoxFlat
+var _style_hover: StyleBoxFlat
+var _style_focused: StyleBoxFlat
 
 # Paleta argentina
 const COLOR_CELESTE: Color = Color("#75AADB")
@@ -28,9 +33,11 @@ const COLOR_SOMBRA: Color = Color(0.086, 0.196, 0.31, 0.28)
 func _ready() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(250, 240)
+	custom_minimum_size = Vector2(300, 290)
 	pivot_offset = custom_minimum_size * 0.5
 	
+	_init_cached_styles()
+
 	# Conexión de eventos de entrada y foco
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
@@ -39,6 +46,31 @@ func _ready() -> void:
 	gui_input.connect(_on_gui_input)
 
 	_update_style(false, false)
+
+func _init_cached_styles() -> void:
+	_style_normal = _create_card_style(COLOR_BLANCO, COLOR_CELESTE, 2, 4)
+	_style_hover = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO, 3, 8)
+	_style_focused = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO_BRIGHT, 4, 12)
+
+func _create_card_style(bg: Color, border: Color, border_width: int, shadow: int) -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
+	style.shadow_color = COLOR_SOMBRA
+	style.shadow_offset = Vector2(0, 5)
+	style.bg_color = bg
+	style.border_color = border
+	style.set_border_width_all(border_width)
+	style.shadow_size = shadow
+	style.content_margin_left = 0
+	style.content_margin_right = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
+	
+	return style
+
 
 ## Configura la tarjeta con los datos de un juego detectado
 func setup(p_game_info: Dictionary, p_icon: Texture2D) -> void:
@@ -49,6 +81,8 @@ func setup(p_game_info: Dictionary, p_icon: Texture2D) -> void:
 	
 	if icon_rect:
 		icon_rect.texture = p_icon
+		var proporcion = float(icon_rect.texture.get_width()/float(icon_rect.texture.get_height())) 
+		aspectRatio.ratio = proporcion
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
@@ -104,38 +138,9 @@ func _animate_card(target_scale: float) -> void:
 	_tween.tween_property(self, "scale", Vector2(target_scale, target_scale), 0.15)
 
 func _update_style(hovered: bool, focused: bool) -> void:
-	var style = StyleBoxFlat.new()
-	style.corner_radius_top_left = 14
-	style.corner_radius_top_right = 14
-	style.corner_radius_bottom_left = 14
-	style.corner_radius_bottom_right = 14
-	
-	style.shadow_color = COLOR_SOMBRA
-	style.shadow_offset = Vector2(0, 5)
-
 	if focused:
-		# Borde dorado brillante y fondo celeste suave
-		style.bg_color = COLOR_CELESTE_LIGHT
-		style.border_color = COLOR_DORADO_BRIGHT
-		style.set_border_width_all(4)
-		style.shadow_size = 12
+		add_theme_stylebox_override("panel", _style_focused)
 	elif hovered:
-		# Borde dorado y fondo celeste suave
-		style.bg_color = COLOR_CELESTE_LIGHT
-		style.border_color = COLOR_DORADO
-		style.set_border_width_all(3)
-		style.shadow_size = 8
+		add_theme_stylebox_override("panel", _style_hover)
 	else:
-		# Estado normal: fondo blanco, borde celeste discreto
-		style.bg_color = COLOR_BLANCO
-		style.border_color = COLOR_CELESTE
-		style.set_border_width_all(2)
-		style.shadow_size = 4
-
-	# Márgenes interiores del panel
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 18
-	style.content_margin_bottom = 18
-
-	add_theme_stylebox_override("panel", style)
+		add_theme_stylebox_override("panel", _style_normal)

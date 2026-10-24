@@ -13,6 +13,7 @@ var _is_game_running: bool = false
 var _current_pid: int = 0
 var _current_game: Dictionary = {}
 var _monitor_timer: Timer
+var _previous_window_mode: DisplayServer.WindowMode = DisplayServer.WINDOW_MODE_FULLSCREEN
 
 func _ready() -> void:
 	# Configurar temporizador para monitoreo no bloqueante del proceso hijo
@@ -39,9 +40,9 @@ func launch_game(game_info: Dictionary) -> bool:
 		launch_failed.emit(game_info, "Ya hay un juego en ejecución (" + running_name + "). Esperá a que termine.")
 		return false
 
-	var exe_path = game_info.get("executable_path", "").strip_edges()
+	var exe_path = game_info.get("executable_path", "").strip_edges().replace("/", "\\")
 	var game_name = game_info.get("name", "Juego desconocido")
-	var working_dir = game_info.get("working_directory", "")
+	var working_dir = game_info.get("working_directory", exe_path.get_base_dir()).replace("/", "\\")
 
 	# 2. Validaciones previas de integridad
 	if exe_path.is_empty():
@@ -56,12 +57,22 @@ func launch_game(game_info: Dictionary) -> bool:
 		launch_failed.emit(game_info, "El ejecutable '" + exe_path.get_file() + "' no existe o fue eliminado de la carpeta.")
 		return false
 
-	# 3. Iniciar el proceso mediante la API nativa de Godot
+	# 3. Iniciar el proceso estableciendo el directorio de trabajo correcto
 	print("GameLauncher: Iniciando '" + game_name + "' -> " + exe_path)
 	print("GameLauncher: Directorio de trabajo: " + working_dir)
 
-	# Se utiliza OS.create_process para crear un proceso independiente no bloqueante
-	var pid: int = OS.create_process(exe_path, PackedStringArray([]), false)
+	var pid: int = 0
+	if OS.has_feature("windows"):
+		# En Windows, para que los juegos encuentren sus dependencias (.pck, DLLs, assets, saves),
+		# se debe cambiar el directorio de trabajo a su propia carpeta.
+		# Se ejecuta a través de cmd.exe /c "cd /d "<working_dir>" && "<exe_path>"" de forma invisible (sin consola)
+		var cmd_args = PackedStringArray([
+			"/c",
+			"cd /d \"" + working_dir + "\" && \"" + exe_path + "\""
+		])
+		pid = OS.create_process("cmd.exe", cmd_args, false)
+	else:
+		pid = OS.create_process(exe_path, PackedStringArray([]), false)
 
 	if pid <= 0:
 		launch_failed.emit(game_info, "Error del sistema al crear el proceso para '" + game_name + "' (PID inválido).")
@@ -103,7 +114,7 @@ func _on_monitor_timer_timeout() -> void:
 		_current_pid = 0
 		_current_game = {}
 
-		# Restaurar ventana del launcher a pantalla completa y devolver foco
+		# Restaurar ventana del launcher a su modo anterior y devolver foco
 		_restore_launcher_window()
 
 		# Notificar retorno a la interfaz
@@ -111,12 +122,13 @@ func _on_monitor_timer_timeout() -> void:
 
 ## Minimiza el launcher temporalmente para dar paso al videojuego
 func _minimize_launcher_window() -> void:
-	# En Windows, cambiar el modo de ventana a minimizado permite que el proceso hijo tome el foco
+	_previous_window_mode = DisplayServer.window_get_mode()
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
 
-## Restaura la ventana del launcher en pantalla completa y primer plano
+## Restaura la ventana del launcher preservando la configuración de pantalla
 func _restore_launcher_window() -> void:
-	# Restaurar modo pantalla completa sin bordes
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
-	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+	var target_mode = _previous_window_mode
+	if target_mode == DisplayServer.WINDOW_MODE_MINIMIZED:
+		target_mode = DisplayServer.WINDOW_MODE_FULLSCREEN
+	DisplayServer.window_set_mode(target_mode)
 	DisplayServer.window_move_to_foreground()

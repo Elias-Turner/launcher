@@ -31,6 +31,8 @@ func _init() -> void:
 	all_passed = test_accented_and_spaced_names(test_sandbox_path) and all_passed
 	all_passed = test_auxiliary_uninstaller_filtering(test_sandbox_path) and all_passed
 	all_passed = test_icon_fallback_hierarchy(test_sandbox_path) and all_passed
+	all_passed = test_sibling_games_directory_resolution(test_sandbox_path) and all_passed
+	all_passed = test_svg_and_dynamic_icon_detection(test_sandbox_path) and all_passed
 	all_passed = test_launcher_error_handling() and all_passed
 	all_passed = test_kiosk_configuration() and all_passed
 
@@ -206,6 +208,43 @@ func test_kiosk_configuration() -> bool:
 	set_auto_accept_quit(false)
 	print("   [OK] Auto-accept quit configurado en falso para control Kiosco.")
 	return true
+
+## Prueba H: Resolución de directorio de juegos
+func test_sibling_games_directory_resolution(sandbox_path: String) -> bool:
+	print("-> Prueba H: Detección y resolución de carpeta de juegos...")
+	var sibling_games = sandbox_path.path_join("games_folder")
+	DirAccess.make_dir_recursive_absolute(sibling_games)
+	
+	# Simular configuración con carpeta de juegos
+	var resolved = GameScannerScript.get_games_directory("", {"games_folder": sibling_games})
+	if resolved == sibling_games.replace("\\", "/"):
+		print("   [OK] Carpeta de juegos resuelta correctamente según configuración.")
+		return true
+	push_error("   [FALLO] No se resolvió la carpeta de juegos configurada.")
+	return false
+
+## Prueba I: Detección de icono SVG y nombrado dinámico
+func test_svg_and_dynamic_icon_detection(sandbox_path: String) -> bool:
+	print("-> Prueba I: Detección de iconos SVG...")
+	var game_folder = sandbox_path.path_join("Juego Godot SVG")
+	DirAccess.make_dir_recursive_absolute(game_folder)
+	# Copiar icono svg existente como icon.svg
+	var src_svg = ProjectSettings.globalize_path("res://assets/icons/default_game_icon.svg")
+	var dst_svg = game_folder.path_join("icon.svg")
+	DirAccess.copy_absolute(src_svg, dst_svg)
+	
+	var dummy_game = {
+		"folder_path": game_folder,
+		"explicit_icon": "",
+		"executable_path": game_folder.path_join("Juego.exe"),
+		"id": "juego_godot_svg"
+	}
+	var tex = IconManagerScript.get_game_icon(dummy_game)
+	if tex != null:
+		print("   [OK] Icono SVG de juego identificado y cargado con éxito.")
+		return true
+	push_error("   [FALLO] No se pudo cargar el icono SVG del juego.")
+	return false
 
 ## Auxiliar: Crear archivo de prueba ficticio
 func _create_dummy_file(path: String) -> void:
