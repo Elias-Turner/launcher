@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="celesteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8BBEEF"/>
+      <stop offset="50%" stop-color="#75AADB"/>
+      <stop offset="100%" stop-color="#5B95C9"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FED156"/>
+      <stop offset="50%" stop-color="#F6B40E"/>
+      <stop offset="100%" stop-color="#D79705"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#16324F" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Fondo circular con borde dorado -->
+  <circle cx="128" cy="128" r="116" fill="url(#celesteGrad)" filter="url(#cardShadow)"/>
+  <circle cx="128" cy="128" r="114" fill="none" stroke="url(#goldGrad)" stroke-width="5"/>
+  <circle cx="128" cy="128" r="105" fill="#FFFFFF" fill-opacity="0.15"/>
+
+  <!-- Franja central blanca de la escarapela / bandera -->
+  <rect x="22" y="96" width="212" height="64" rx="10" fill="#FFFFFF" fill-opacity="0.9"/>
+  <rect x="22" y="96" width="212" height="64" rx="10" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- Silueta de Gamepad moderno -->
+  <g transform="translate(128, 128) scale(0.85) translate(-128, -128)">
+    <!-- Cuerpo del joystick -->
+    <path d="M 68 84 C 50 84, 34 104, 38 132 C 42 160, 56 196, 76 196 C 92 196, 102 174, 114 174 L 142 174 C 154 174, 164 196, 180 196 C 200 196, 214 160, 218 132 C 222 104, 206 84, 188 84 Z" 
+          fill="#1C3B57" stroke="url(#goldGrad)" stroke-width="4"/>
+    
+    <!-- Grips interiores suaves -->
+    <path d="M 72 94 C 58 94, 46 110, 48 132 C 52 154, 62 182, 76 182 C 86 182, 96 166, 108 166 L 148 166 C 160 166, 170 182, 180 182 C 194 182, 204 154, 208 132 C 210 110, 198 94, 184 94 Z" 
+          fill="#FFFFFF" fill-opacity="0.12"/>
+
+    <!-- Cruceta / D-Pad (Izquierda) -->
+    <path d="M 74 116 L 74 126 L 64 126 L 64 138 L 74 138 L 74 148 L 86 148 L 86 138 L 96 138 L 96 126 L 86 126 L 86 116 Z" 
+          fill="url(#goldGrad)" stroke="#16324F" stroke-width="1.5"/>
+
+    <!-- Botones de Acción (Derecha) estilo ABXY con dorado y celeste -->
+    <circle cx="170" cy="118" r="6" fill="url(#goldGrad)"/>
+    <circle cx="182" cy="130" r="6" fill="#75AADB"/>
+    <circle cx="158" cy="130" r="6" fill="#75AADB"/>
+    <circle cx="170" cy="142" r="6" fill="url(#goldGrad)"/>
+
+    <!-- Mini Sol de Mayo en el centro del Joystick -->
+    <circle cx="128" cy="120" r="10" fill="url(#goldGrad)"/>
+    <circle cx="128" cy="120" r="6" fill="#FED156"/>
+    <!-- Rayitos del sol central -->
+    <path d="M 128 104 L 128 108 M 128 132 L 128 136 M 112 120 L 116 120 M 140 120 L 144 120 M 117 109 L 120 112 M 136 128 L 139 131 M 117 131 L 120 128 M 136 112 L 139 109" 
+          stroke="url(#goldGrad)" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Luces LED de estado -->
+    <circle cx="123" cy="142" r="2" fill="#75AADB"/>
+    <circle cx="128" cy="142" r="2" fill="#FED156"/>
+    <circle cx="133" cy="142" r="2" fill="#75AADB"/>
+  </g>
+</svg>

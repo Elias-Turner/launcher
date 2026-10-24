@@ -1,0 +1,345 @@
+[gd_scene format=3 uid="uid://b5k8x9a2m7j3q"]
+
+[ext_resource type="Script" path="res://scripts/launcher.gd" id="1_launcher"]
+[ext_resource type="PackedScene" path="res://scenes/sun_of_may.tscn" id="2_sun"]
+
+[sub_resource type="Gradient" id="Gradient_flag"]
+offsets = PackedFloat32Array(0, 0.28, 0.35, 0.65, 0.72, 1)
+colors = PackedColorArray(0.458824, 0.666667, 0.858824, 1, 0.458824, 0.666667, 0.858824, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.458824, 0.666667, 0.858824, 1, 0.458824, 0.666667, 0.858824, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_flag")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(1, 1, 1, 0.95)
+shadow_color = Color(0.0862745, 0.196078, 0.309804, 0.18)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_empty"]
+content_margin_left = 36.0
+content_margin_top = 32.0
+content_margin_right = 36.0
+content_margin_bottom = 32.0
+bg_color = Color(1, 1, 1, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.964706, 0.705882, 0.054902, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0862745, 0.196078, 0.309804, 0.2)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_refresh_btn"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.458824, 0.666667, 0.858824, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.964706, 0.705882, 0.054902, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toast"]
+content_margin_left = 28.0
+content_margin_top = 12.0
+content_margin_right = 28.0
+content_margin_bottom = 12.0
+bg_color = Color(0.109804, 0.231373, 0.341176, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.964706, 0.705882, 0.054902, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.0862745, 0.196078, 0.309804, 0.35)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer"]
+bg_color = Color(0.921569, 0.960784, 1, 0.96)
+shadow_color = Color(0.0862745, 0.196078, 0.309804, 0.12)
+shadow_size = 4
+shadow_offset = Vector2(0, -2)
+
+[node name="Launcher" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_launcher")
+
+[node name="FlagBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_bg")
+expand_mode = 1
+
+[node name="BackgroundSun" parent="." instance=ExtResource("2_sun")]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.08)
+layout_mode = 1
+radius = 240.0
+ray_length_factor = 0.6
+draw_face = true
+auto_rotate = true
+rotation_speed = 0.015
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderPanel" type="PanelContainer" parent="MainLayout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="HeaderMargin" type="MarginContainer" parent="MainLayout/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 16
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MainLayout/HeaderPanel/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="SunIconLeft" parent="MainLayout/HeaderPanel/HeaderMargin/HeaderHBox" instance=ExtResource("2_sun")]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+radius = 18.0
+ray_length_factor = 0.45
+draw_face = false
+auto_rotate = false
+
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderPanel/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
+theme_override_colors/font_shadow_color = Color(0.964706, 0.705882, 0.054902, 0.4)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 32
+text = "☀ SELECCIONÁ TU JUEGO ☀"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SunIconRight" parent="MainLayout/HeaderPanel/HeaderMargin/HeaderHBox" instance=ExtResource("2_sun")]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+radius = 18.0
+ray_length_factor = 0.45
+draw_face = false
+auto_rotate = false
+
+[node name="HeaderGoldLine" type="ColorRect" parent="MainLayout"]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.964706, 0.705882, 0.054902, 1)
+
+[node name="ContentArea" type="Control" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/ContentArea"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="ScrollMargin" type="MarginContainer" parent="MainLayout/ContentArea/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 36
+
+[node name="GridCenter" type="CenterContainer" parent="MainLayout/ContentArea/ScrollContainer/ScrollMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GridContainer" type="GridContainer" parent="MainLayout/ContentArea/ScrollContainer/ScrollMargin/GridCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 28
+theme_override_constants/v_separation = 28
+columns = 4
+
+[node name="EmptyState" type="CenterContainer" parent="MainLayout/ContentArea"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EmptyPanel" type="PanelContainer" parent="MainLayout/ContentArea/EmptyState"]
+custom_minimum_size = Vector2(520, 260)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_empty")
+
+[node name="EmptyVBox" type="VBoxContainer" parent="MainLayout/ContentArea/EmptyState/EmptyPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="EmptySun" parent="MainLayout/ContentArea/EmptyState/EmptyPanel/EmptyVBox" instance=ExtResource("2_sun")]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+radius = 26.0
+ray_length_factor = 0.5
+draw_face = true
+auto_rotate = false
+
+[node name="EmptyTitle" type="Label" parent="MainLayout/ContentArea/EmptyState/EmptyPanel/EmptyVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
+theme_override_font_sizes/font_size = 22
+text = "NO SE ENCONTRARON JUEGOS"
+horizontal_alignment = 1
+
+[node name="EmptySubtitle" type="Label" parent="MainLayout/ContentArea/EmptyState/EmptyPanel/EmptyVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.3, 0.38, 1)
+theme_override_font_sizes/font_size = 15
+text = "Colocá las carpetas de tus juegos junto al launcher y volvé a actualizar la biblioteca."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EmptyBtn" type="Button" parent="MainLayout/ContentArea/EmptyState/EmptyPanel/EmptyVBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_refresh_btn")
+text = "Actualizar biblioteca (F5)"
+
+[node name="FooterGoldLine" type="ColorRect" parent="MainLayout"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0.964706, 0.705882, 0.054902, 1)
+
+[node name="FooterPanel" type="PanelContainer" parent="MainLayout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_footer")
+
+[node name="FooterMargin" type="MarginContainer" parent="MainLayout/FooterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 10
+
+[node name="FooterHBox" type="HBoxContainer" parent="MainLayout/FooterPanel/FooterMargin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="GamesCountLabel" type="Label" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
+theme_override_font_sizes/font_size = 15
+text = "Juegos disponibles: 0"
+
+[node name="Sep1" type="Label" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.964706, 0.705882, 0.054902, 1)
+text = "•"
+
+[node name="StatusLabel" type="Label" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
+theme_override_font_sizes/font_size = 15
+text = "Sistema listo"
+
+[node name="FooterSpacer1" type="Control" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HelpLabel" type="Label" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.0862745, 0.196078, 0.309804, 1)
+theme_override_font_sizes/font_size = 15
+text = "Navegá con mouse o flechas | [Enter] para jugar | [F5] Actualizar"
+
+[node name="FooterSpacer2" type="Control" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VersionLabel" type="Label" parent="MainLayout/FooterPanel/FooterMargin/FooterHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
+theme_override_font_sizes/font_size = 15
+text = "Launcher Argentino v1.0"
+
+[node name="ToastAnchor" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -120.0
+offset_right = 300.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="ToastPanel" type="PanelContainer" parent="ToastAnchor"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toast")
+
+[node name="ToastLabel" type="Label" parent="ToastAnchor/ToastPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Notificación del sistema"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="pressed" from="MainLayout/ContentArea/EmptyState/EmptyPanel/EmptyVBox/EmptyBtn" to="." method="refresh_library"]

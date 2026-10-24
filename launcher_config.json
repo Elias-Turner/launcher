@@ -1,0 +1,15 @@
+{
+  "_comentario": "Archivo de configuración opcional para el Launcher Argentino. Permite personalizar el comportamiento de carpetas específicas sin modificar código.",
+  "games": {
+    "Ejemplo_Personalizado": {
+      "display_name": "Mi Juego Favorito",
+      "executable": "bin/Juego.exe",
+      "working_directory": "bin",
+      "icon": "recursos/icono_personalizado.png",
+      "exclude": false
+    },
+    "Carpeta_Herramientas": {
+      "exclude": true
+    }
+  }
+}
