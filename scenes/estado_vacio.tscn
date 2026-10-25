@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://b8vkwyxhksndg"]
+
+[ext_resource type="Theme" uid="uid://cmgd15y2pl5gq" path="res://assets/themes/game_card_theme.tres" id="1_0y0fp"]
+[ext_resource type="Script" uid="uid://cph4132w1uq8x" path="res://scripts/estado_vacio.gd" id="1_kp3yg"]
+
+[node name="EstadoVacio" type="Control" unique_id=1329009363]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_0y0fp")
+script = ExtResource("1_kp3yg")
+
+[node name="EmptyState" type="CenterContainer" parent="." unique_id=687338245]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EmptyPanel" type="PanelContainer" parent="EmptyState" unique_id=650807323]
+custom_minimum_size = Vector2(520, 260)
+layout_mode = 2
+
+[node name="EmptyVBox" type="VBoxContainer" parent="EmptyState/EmptyPanel" unique_id=1723968425]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="EmptyTitle" type="Label" parent="EmptyState/EmptyPanel/EmptyVBox" unique_id=1298545441]
+layout_mode = 2
+text = "NO SE ENCONTRARON JUEGOS"
+horizontal_alignment = 1
+
+[node name="EmptySubtitle" type="Label" parent="EmptyState/EmptyPanel/EmptyVBox" unique_id=1788341045]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Colocá las carpetas de tus juegos dentro de la carpeta 'Juegos' (al mismo nivel que lanzador) y presioná F5."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EmptyBtn" type="Button" parent="EmptyState/EmptyPanel/EmptyVBox" unique_id=1060984004]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Actualizar biblioteca (F5)"
+
+[connection signal="pressed" from="EmptyState/EmptyPanel/EmptyVBox/EmptyBtn" to="." method="_on_empty_btn_pressed"]

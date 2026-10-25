@@ -1,6 +1,8 @@
+PanelContainer
+Control
+VBoxContainer
+CanvasLayer
 AspectRatioContainer
 ColorRect
 TextureRect
 Node
-VBoxContainer
-Control

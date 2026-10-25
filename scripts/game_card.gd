@@ -1,5 +1,5 @@
 class_name GameCard
-extends PanelContainer
+extends Control
 
 ## GameCard: Representa visualmente un juego en la biblioteca del launcher.
 ## Maneja los estados normal, hover y seleccionado con estética argentina,
@@ -10,7 +10,8 @@ signal card_focused(game_info: Dictionary)
 
 @onready var icon_rect: TextureRect = %IconRect
 @onready var name_label: Label = %NameLabel
-@onready var aspectRatio: AspectRatioContainer = $AspectRatioContainer
+@onready var aspect_ratio_container: AspectRatioContainer = $VBoxContainer/AspectRatioContainer
+
 
 var game_info: Dictionary = {}
 var _is_hovered: bool = false
@@ -33,10 +34,10 @@ const COLOR_SOMBRA: Color = Color(0.086, 0.196, 0.31, 0.28)
 func _ready() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(300, 290)
+	custom_minimum_size = Vector2(350, 350)
 	pivot_offset = custom_minimum_size * 0.5
 	
-	_init_cached_styles()
+	# _init_cached_styles()
 
 	# Conexión de eventos de entrada y foco
 	mouse_entered.connect(_on_mouse_entered)
@@ -47,29 +48,10 @@ func _ready() -> void:
 
 	_update_style(false, false)
 
-func _init_cached_styles() -> void:
-	_style_normal = _create_card_style(COLOR_BLANCO, COLOR_CELESTE, 2, 4)
-	_style_hover = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO, 3, 8)
-	_style_focused = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO_BRIGHT, 4, 12)
-
-func _create_card_style(bg: Color, border: Color, border_width: int, shadow: int) -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.corner_radius_top_left = 14
-	style.corner_radius_top_right = 14
-	style.corner_radius_bottom_left = 14
-	style.corner_radius_bottom_right = 14
-	style.shadow_color = COLOR_SOMBRA
-	style.shadow_offset = Vector2(0, 5)
-	style.bg_color = bg
-	style.border_color = border
-	style.set_border_width_all(border_width)
-	style.shadow_size = shadow
-	style.content_margin_left = 0
-	style.content_margin_right = 0
-	style.content_margin_top = 0
-	style.content_margin_bottom = 0
-	
-	return style
+# func _init_cached_styles() -> void:
+	# _style_normal = _create_card_style(COLOR_BLANCO, COLOR_CELESTE, 2, 4)
+	# _style_hover = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO, 3, 8)
+	# _style_focused = _create_card_style(COLOR_CELESTE_LIGHT, COLOR_DORADO_BRIGHT, 4, 12)
 
 
 ## Configura la tarjeta con los datos de un juego detectado
@@ -82,7 +64,7 @@ func setup(p_game_info: Dictionary, p_icon: Texture2D) -> void:
 	if icon_rect:
 		icon_rect.texture = p_icon
 		var proporcion = float(icon_rect.texture.get_width()/float(icon_rect.texture.get_height())) 
-		aspectRatio.ratio = proporcion
+		aspect_ratio_container.ratio = proporcion
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:

@@ -82,7 +82,7 @@ static func get_game_icon(game_info: Dictionary) -> Texture2D:
 					return tex
 
 		# 3. Búsqueda con el nombre de la carpeta o del ejecutable (ej. MiJuego.png, Juego.svg)
-		var folder_name = folder_path.get_file()
+		var folder_name = folder_path.get_file() + "_caratula"
 		var exe_base = exe_path.get_file().get_basename()
 		var dynamic_names = [folder_name, exe_base, folder_name.to_lower(), exe_base.to_lower()]
 		for base_name in dynamic_names:

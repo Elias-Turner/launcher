@@ -15,7 +15,7 @@ const GameCardScript = preload("res://scripts/game_card.gd")
 # Nodos de la interfaz (con resolución segura para permitir personalizaciones visuales de la escena)
 @onready var grid_container: GridContainer = %GridContainer
 @onready var scroll_container: ScrollContainer = %ScrollContainer
-@onready var empty_state: Control = %EmptyState
+@onready var estado_vacio: Control = $CanvasLayer/EstadoVacio
 @onready var toast_panel: PanelContainer = %ToastPanel
 @onready var toast_label: Label = %ToastLabel
 @onready var status_label: Label = get_node_or_null("%StatusLabel")
@@ -38,6 +38,7 @@ func _ready() -> void:
 	game_launcher.game_started.connect(_on_game_started)
 	game_launcher.game_finished.connect(_on_game_finished)
 	game_launcher.launch_failed.connect(_on_launch_failed)
+	estado_vacio.actualizar.connect(refresh_library)
 	add_child(game_launcher)
 
 	# 3. Conectar señal de cambio de tamaño para responsividad de la cuadrícula
@@ -143,14 +144,14 @@ func _rebuild_cards() -> void:
 		status_label.text = "Sistema listo"
 
 	if total_count == 0:
-		if empty_state:
-			empty_state.visible = true
+		if estado_vacio:
+			estado_vacio.visible = true
 		if grid_container:
 			grid_container.visible = false
 		return
 
-	if empty_state:
-		empty_state.visible = false
+	if estado_vacio:
+		estado_vacio.visible = false
 	if grid_container:
 		grid_container.visible = true
 
@@ -182,20 +183,22 @@ func _rebuild_cards() -> void:
 func _adjust_grid_columns() -> void:
 	if not is_inside_tree() or not grid_container:
 		return
-		
+	
+	# obtiene el ancho de la pantalla 
 	var width = get_viewport_rect().size.x
-	var cols = 4
+	# determina numero de columnas
+	var columnas = 4
 	
 	if width >= 1800:
-		cols = 5
+		columnas = 4
 	elif width >= 1350:
-		cols = 4
+		columnas = 3
 	elif width >= 950:
-		cols = 3
+		columnas = 2
 	else:
-		cols = 2
+		columnas = 1
 		
-	grid_container.columns = cols
+	grid_container.columns = columnas
 
 func _on_viewport_size_changed() -> void:
 	_adjust_grid_columns()
@@ -204,25 +207,25 @@ func _on_viewport_size_changed() -> void:
 ## Configura los vecinos de foco (arriba, abajo, izquierda, derecha) para navegación por teclado
 func _setup_card_focus_neighbors() -> void:
 	var total = _card_nodes.size()
-	var cols = grid_container.columns
-	if total == 0 or cols <= 0:
+	var columnas = grid_container.columns
+	if total == 0 or columnas <= 0:
 		return
 
 	for i in range(total):
 		var card = _card_nodes[i]
 		
 		# Vecino izquierdo
-		if i % cols > 0:
+		if i % columnas > 0:
 			card.focus_neighbor_left = _card_nodes[i - 1].get_path()
 		# Vecino derecho
-		if i % cols < cols - 1 and (i + 1) < total:
+		if i % columnas < columnas - 1 and (i + 1) < total:
 			card.focus_neighbor_right = _card_nodes[i + 1].get_path()
 		# Vecino arriba
-		if i - cols >= 0:
-			card.focus_neighbor_top = _card_nodes[i - cols].get_path()
+		if i - columnas >= 0:
+			card.focus_neighbor_top = _card_nodes[i - columnas].get_path()
 		# Vecino abajo
-		if i + cols < total:
-			card.focus_neighbor_bottom = _card_nodes[i + cols].get_path()
+		if i + columnas < total:
+			card.focus_neighbor_bottom = _card_nodes[i + columnas].get_path()
 
 ## Al hacer clic en cualquier parte de una tarjeta
 func _on_card_pressed(game_info: Dictionary) -> void:

@@ -1,0 +1,11 @@
+[gd_resource type="Theme" format=3 uid="uid://cmgd15y2pl5gq"]
+
+[ext_resource type="StyleBox" uid="uid://pkwet3qtsc17" path="res://assets/styles/panel_style_box_flat.tres" id="1_0e8tb"]
+[ext_resource type="StyleBox" uid="uid://yo72uat46ji6" path="res://assets/styles/button_normal_style_box_flat.tres" id="1_mu5ay"]
+
+[resource]
+Button/font_sizes/font_size = 20
+Button/styles/normal = ExtResource("1_mu5ay")
+Label/colors/font_color = Color(0.8741615, 0.8741615, 0.8741615, 1)
+Label/font_sizes/font_size = 20
+PanelContainer/styles/panel = ExtResource("1_0e8tb")

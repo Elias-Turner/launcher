@@ -1,39 +1,55 @@
 [gd_scene format=3 uid="uid://c6f3q18k8m4y2"]
 
 [ext_resource type="Script" uid="uid://b2vxxp2gyjt20" path="res://scripts/game_card.gd" id="1_card"]
+[ext_resource type="Theme" uid="uid://cmgd15y2pl5gq" path="res://assets/themes/game_card_theme.tres" id="1_hncku"]
 
-[node name="GameCard" type="PanelContainer" unique_id=1904999963]
-custom_minimum_size = Vector2(250, 240)
-offset_right = 250.0
-offset_bottom = 240.0
-pivot_offset = Vector2(125, 120)
+[node name="GameCard" type="PanelContainer" unique_id=1747050293]
+custom_minimum_size = Vector2(350, 350)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -175.0
+offset_top = -175.0
+offset_right = 175.0
+offset_bottom = 175.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 focus_mode = 2
+mouse_filter = 2
+theme = ExtResource("1_hncku")
 script = ExtResource("1_card")
 
-[node name="AspectRatioContainer" type="AspectRatioContainer" parent="." unique_id=169680246]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=194728110]
+layout_mode = 2
+alignment = 1
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="VBoxContainer" unique_id=169680246]
 layout_mode = 2
 
-[node name="CardVBox" type="VBoxContainer" parent="AspectRatioContainer" unique_id=174210417]
+[node name="CardVBox" type="VBoxContainer" parent="VBoxContainer/AspectRatioContainer" unique_id=174210417]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="IconRect" type="TextureRect" parent="AspectRatioContainer/CardVBox" unique_id=971866169]
+[node name="IconRect" type="TextureRect" parent="VBoxContainer/AspectRatioContainer/CardVBox" unique_id=971866169]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(250, 200)
+custom_minimum_size = Vector2(300, 300)
+propagate_maximum_size = true
 layout_mode = 2
-size_flags_vertical = 3
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="NameLabel" type="Label" parent="AspectRatioContainer/CardVBox" unique_id=598339852]
+[node name="NameLabel" type="Label" parent="VBoxContainer" unique_id=598339852]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(210, 48)
+propagate_maximum_size = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.109804, 0.231373, 0.341176, 1)
-theme_override_font_sizes/font_size = 17
 text = "Nombre del Videojuego"
 horizontal_alignment = 1
 vertical_alignment = 1

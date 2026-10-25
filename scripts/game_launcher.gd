@@ -18,7 +18,7 @@ var _previous_window_mode: DisplayServer.WindowMode = DisplayServer.WINDOW_MODE_
 func _ready() -> void:
 	# Configurar temporizador para monitoreo no bloqueante del proceso hijo
 	_monitor_timer = Timer.new()
-	_monitor_timer.wait_time = 0.5
+	_monitor_timer.wait_time = 0.1
 	_monitor_timer.one_shot = false
 	_monitor_timer.autostart = false
 	_monitor_timer.timeout.connect(_on_monitor_timer_timeout)
@@ -84,7 +84,9 @@ func launch_game(game_info: Dictionary) -> bool:
 	_current_game = game_info
 
 	# 5. Ocultar o minimizar temporalmente la ventana del launcher para que el juego tome el primer plano
-	_minimize_launcher_window()
+	# _minimize_launcher_window()
+	Engine.max_fps = 5
+	OS.low_processor_usage_mode = true
 
 	# 6. Iniciar monitoreo del proceso
 	_monitor_timer.start()
@@ -115,7 +117,10 @@ func _on_monitor_timer_timeout() -> void:
 		_current_game = {}
 
 		# Restaurar ventana del launcher a su modo anterior y devolver foco
-		_restore_launcher_window()
+		# _restore_launcher_window()
+		Engine.max_fps = 60
+		OS.low_processor_usage_mode = false
+		DisplayServer.window_move_to_foreground()
 
 		# Notificar retorno a la interfaz
 		game_finished.emit(finished_game, exit_code)
