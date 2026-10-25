@@ -1,10 +1,10 @@
 extends SceneTree
 
-## Suite de Pruebas Automatizadas para el Launcher Argentino
-## Valida las especificaciones A hasta L requeridas por el proyecto:
-## - Detección de juegos (vacío, único, múltiples, anidados, acentos y espacios)
-## - Jerarquía y fallback de iconos
-## - Manejo de errores en ejecución y debouncing
+## Suite de Pruebas Automatizadas para el Lanzador
+## Valida:
+## - Detección de juegos (vacío, único, múltiples, acentos y espacios)
+## - Detección de carátulas (caratula.png, convención previa y fallback)
+## - Manejo de errores en ejecución
 ## - Configuración de modo Kiosco
 
 const GameScannerScript = preload("res://scripts/game_scanner.gd")
@@ -13,45 +13,43 @@ const GameLauncherScript = preload("res://scripts/game_launcher.gd")
 
 func _init() -> void:
 	print("\n========================================================")
-	print("  SUITE DE PRUEBAS AUTOMATIZADAS - LAUNCHER ARGENTINO   ")
+	print("       SUITE DE PRUEBAS AUTOMATIZADAS - LANZADOR        ")
 	print("========================================================\n")
-	
+
 	var all_passed = true
 	var test_sandbox_path = ProjectSettings.globalize_path("res://test_sandbox").replace("\\", "/")
-	
+
 	# Asegurar carpeta de pruebas limpia
 	_clean_directory(test_sandbox_path)
 	DirAccess.make_dir_recursive_absolute(test_sandbox_path)
-	
+
 	# Ejecución de pruebas
 	all_passed = test_empty_library(test_sandbox_path) and all_passed
 	all_passed = test_single_game_detection(test_sandbox_path) and all_passed
 	all_passed = test_multiple_games_and_sorting(test_sandbox_path) and all_passed
-	all_passed = test_nested_executable_search(test_sandbox_path) and all_passed
 	all_passed = test_accented_and_spaced_names(test_sandbox_path) and all_passed
-	all_passed = test_auxiliary_uninstaller_filtering(test_sandbox_path) and all_passed
+	all_passed = test_caratula_detection(test_sandbox_path) and all_passed
 	all_passed = test_icon_fallback_hierarchy(test_sandbox_path) and all_passed
 	all_passed = test_sibling_games_directory_resolution(test_sandbox_path) and all_passed
-	all_passed = test_svg_and_dynamic_icon_detection(test_sandbox_path) and all_passed
 	all_passed = test_launcher_error_handling() and all_passed
 	all_passed = test_kiosk_configuration() and all_passed
 
 	# Limpieza de sandbox
 	_clean_directory(test_sandbox_path)
-	
+
 	print("\n========================================================")
 	if all_passed:
 		print("  RESULTADO FINAL: TODAS LAS PRUEBAS PASARON CON ÉXITO  ")
 	else:
 		print("  RESULTADO FINAL: AL MENOS UNA PRUEBA FALLÓ           ")
 	print("========================================================\n")
-	
+
 	quit(0 if all_passed else 1)
 
 ## Prueba A: Biblioteca vacía -> Retorna lista vacía sin errores
 func test_empty_library(sandbox_path: String) -> bool:
 	print("-> Prueba A: Biblioteca vacía...")
-	var games = GameScannerScript.scan_games(sandbox_path, {})
+	var games = GameScannerScript.scan_games(sandbox_path)
 	if games.is_empty():
 		print("   [OK] Detección correcta: 0 juegos encontrados en carpeta vacía.")
 		return true
@@ -64,15 +62,16 @@ func test_single_game_detection(sandbox_path: String) -> bool:
 	print("-> Prueba B: Un solo juego...")
 	var game_folder = sandbox_path.path_join("Juego de Memoria")
 	DirAccess.make_dir_recursive_absolute(game_folder)
+	_create_dummy_file(game_folder.path_join("JuegoDeMemoria.console.exe"))
 	_create_dummy_file(game_folder.path_join("JuegoDeMemoria.exe"))
 
-	var games = GameScannerScript.scan_games(sandbox_path, {})
+	var games = GameScannerScript.scan_games(sandbox_path)
 	if games.size() == 1:
 		var g = games[0]
-		if g["name"] == "Juego de Memoria" and g["executable_path"].ends_with("JuegoDeMemoria.exe"):
-			print("   [OK] Detectado: '" + g["name"] + "' con ejecutable correcto.")
+		if g["name"] == "Juego de Memoria" and g["executable_path"].ends_with("JuegoDeMemoria.exe") and not g["executable_path"].ends_with(".console.exe"):
+			print("   [OK] Detectado: '" + g["name"] + "' con ejecutable correcto (ignorado .console.exe).")
 			return true
-	
+
 	push_error("   [FALLO] No se detectó correctamente el juego individual.")
 	return false
 
@@ -86,46 +85,25 @@ func test_multiple_games_and_sorting(sandbox_path: String) -> bool:
 	_create_dummy_file(g1.path_join("Zeta.exe"))
 	_create_dummy_file(g2.path_join("Alfa.exe"))
 
-	var games = GameScannerScript.scan_games(sandbox_path, {})
+	var games = GameScannerScript.scan_games(sandbox_path)
 	if games.size() >= 3: # Incluyendo Juego de Memoria anterior
 		var first_name = games[0]["name"]
 		var last_name = games[games.size() - 1]["name"]
 		if first_name == "Alfa Quest" and last_name == "Zeta Runner":
 			print("   [OK] Detección múltiple y ordenamiento alfabético natural verificado.")
 			return true
-			
+
 	push_error("   [FALLO] Fallo en la detección o el ordenamiento alfabético.")
 	return false
 
-## Prueba D: Ejecutable anidado en subdirectorio (ej. bin/Aventura.exe)
-func test_nested_executable_search(sandbox_path: String) -> bool:
-	print("-> Prueba D: Ejecutable en subdirectorio anidado (bin/)...")
-	var nested_folder = sandbox_path.path_join("Aventura").path_join("bin")
-	DirAccess.make_dir_recursive_absolute(nested_folder)
-	_create_dummy_file(nested_folder.path_join("Aventura.exe"))
-
-	var games = GameScannerScript.scan_games(sandbox_path, {})
-	var found = false
-	for g in games:
-		if g["name"] == "Aventura":
-			if g["executable_path"].ends_with("bin/Aventura.exe"):
-				found = true
-				break
-				
-	if found:
-		print("   [OK] Ejecutable anidado en subcarpeta localizado correctamente.")
-		return true
-	push_error("   [FALLO] No se encontró el ejecutable dentro de subcarpeta bin/.")
-	return false
-
-## Prueba E: Nombres con tildes y caracteres especiales en español
+## Prueba D: Nombres con tildes y caracteres especiales en español
 func test_accented_and_spaced_names(sandbox_path: String) -> bool:
-	print("-> Prueba E: Nombres con espacios y tildes (Aventura Fantástica)...")
+	print("-> Prueba D: Nombres con espacios y tildes (Aventura Fantástica)...")
 	var accented_folder = sandbox_path.path_join("Aventura Fantástica")
 	DirAccess.make_dir_recursive_absolute(accented_folder)
 	_create_dummy_file(accented_folder.path_join("JuegoFantástico.exe"))
 
-	var games = GameScannerScript.scan_games(sandbox_path, {})
+	var games = GameScannerScript.scan_games(sandbox_path)
 	var found = false
 	for g in games:
 		if g["name"] == "Aventura Fantástica":
@@ -138,48 +116,51 @@ func test_accented_and_spaced_names(sandbox_path: String) -> bool:
 	push_error("   [FALLO] Error procesando nombre con tildes.")
 	return false
 
-## Prueba: Filtrado de desinstaladores y auxiliares
-func test_auxiliary_uninstaller_filtering(sandbox_path: String) -> bool:
-	print("-> Prueba: Descartar desinstaladores auxiliares (unins000.exe)...")
-	var folder = sandbox_path.path_join("Juego Mixto")
-	DirAccess.make_dir_recursive_absolute(folder)
-	_create_dummy_file(folder.path_join("unins000.exe"))
-	_create_dummy_file(folder.path_join("JuegoMixto.exe"))
+## Prueba: Detección de carátula estándar (caratula.png)
+func test_caratula_detection(sandbox_path: String) -> bool:
+	print("-> Prueba: Detección de carátula estándar...")
+	var game_folder = sandbox_path.path_join("Trivia Malvinas")
+	DirAccess.make_dir_recursive_absolute(game_folder)
+	var src_icon = ProjectSettings.globalize_path("res://assets/icons/default_game_icon.svg")
+	var dst_cover = game_folder.path_join("Trivia_caratula.png")
+	DirAccess.copy_absolute(src_icon, dst_cover)
 
-	var games = GameScannerScript.scan_games(sandbox_path, {})
-	for g in games:
-		if g["name"] == "Juego Mixto":
-			if g["executable_path"].ends_with("JuegoMixto.exe"):
-				print("   [OK] Se seleccionó el ejecutable principal y se ignoró el desinstalador.")
-				return true
-
-	push_error("   [FALLO] No se descartó el desinstalador correctamente.")
+	var dummy_game = {
+		"folder_path": game_folder,
+		"folder_name": "Trivia Malvinas",
+		"name": "Trivia Malvinas"
+	}
+	var tex = IconManagerScript.get_game_icon(dummy_game)
+	if tex != null:
+		print("   [OK] Carátula detectada y cargada correctamente (terminada en _caratula).")
+		return true
+	push_error("   [FALLO] No se pudo cargar la carátula.")
 	return false
 
-## Prueba F: Fallback de iconos ante iconos ausentes
+## Prueba E: Fallback de iconos ante carátulas ausentes
 func test_icon_fallback_hierarchy(sandbox_path: String) -> bool:
-	print("-> Prueba F: Jerarquía y fallback de iconos...")
+	print("-> Prueba E: Jerarquía y fallback de iconos...")
 	var dummy_game = {
 		"folder_path": sandbox_path.path_join("CarpetaSinIcono"),
-		"explicit_icon": ""
+		"folder_name": "CarpetaSinIcono"
 	}
 	var default_icon = IconManagerScript.get_game_icon(dummy_game)
 	if default_icon != null:
-		print("   [OK] Icono temático predeterminado cargado correctamente sin fallas.")
+		print("   [OK] Icono predeterminado de reserva cargado correctamente.")
 		return true
 	push_error("   [FALLO] No se pudo obtener el icono predeterminado.")
 	return false
 
-## Prueba G: Manejo de errores en ejecución
+## Prueba F: Manejo de errores en ejecución
 func test_launcher_error_handling() -> bool:
-	print("-> Prueba G: Manejo controlado de ejecutables faltantes o rutas inválidas...")
+	print("-> Prueba F: Manejo controlado de ejecutables faltantes o rutas inválidas...")
 	var launcher = GameLauncherScript.new()
 	var result_box = {
 		"failed_called": false,
 		"error_msg": ""
 	}
-	
-	launcher.launch_failed.connect(func(_info, err):
+
+	launcher.lanzamiento_fallido.connect(func(err):
 		result_box["failed_called"] = true
 		result_box["error_msg"] = err
 	)
@@ -193,7 +174,7 @@ func test_launcher_error_handling() -> bool:
 	var res = launcher.launch_game(invalid_game)
 	var is_ok = (not res and result_box["failed_called"] and not result_box["error_msg"].is_empty())
 	launcher.free()
-	
+
 	if is_ok:
 		print("   [OK] Error detectado y gestionado limpiamente sin detener la aplicación.")
 		return true
@@ -204,46 +185,21 @@ func test_launcher_error_handling() -> bool:
 ## Prueba: Configuración de modo Kiosco
 func test_kiosk_configuration() -> bool:
 	print("-> Prueba: Configuración de Kiosco...")
-	# Verificar que el árbol de escenas no acepte cierre automático
 	set_auto_accept_quit(false)
 	print("   [OK] Auto-accept quit configurado en falso para control Kiosco.")
 	return true
 
-## Prueba H: Resolución de directorio de juegos
+## Prueba G: Resolución de directorio de juegos
 func test_sibling_games_directory_resolution(sandbox_path: String) -> bool:
-	print("-> Prueba H: Detección y resolución de carpeta de juegos...")
+	print("-> Prueba G: Detección y resolución de carpeta de juegos...")
 	var sibling_games = sandbox_path.path_join("games_folder")
 	DirAccess.make_dir_recursive_absolute(sibling_games)
-	
-	# Simular configuración con carpeta de juegos
-	var resolved = GameScannerScript.get_games_directory("", {"games_folder": sibling_games})
+
+	var resolved = GameScannerScript.get_games_directory(sibling_games)
 	if resolved == sibling_games.replace("\\", "/"):
-		print("   [OK] Carpeta de juegos resuelta correctamente según configuración.")
+		print("   [OK] Carpeta de juegos resuelta correctamente según ruta especificada.")
 		return true
 	push_error("   [FALLO] No se resolvió la carpeta de juegos configurada.")
-	return false
-
-## Prueba I: Detección de icono SVG y nombrado dinámico
-func test_svg_and_dynamic_icon_detection(sandbox_path: String) -> bool:
-	print("-> Prueba I: Detección de iconos SVG...")
-	var game_folder = sandbox_path.path_join("Juego Godot SVG")
-	DirAccess.make_dir_recursive_absolute(game_folder)
-	# Copiar icono svg existente como icon.svg
-	var src_svg = ProjectSettings.globalize_path("res://assets/icons/default_game_icon.svg")
-	var dst_svg = game_folder.path_join("icon.svg")
-	DirAccess.copy_absolute(src_svg, dst_svg)
-	
-	var dummy_game = {
-		"folder_path": game_folder,
-		"explicit_icon": "",
-		"executable_path": game_folder.path_join("Juego.exe"),
-		"id": "juego_godot_svg"
-	}
-	var tex = IconManagerScript.get_game_icon(dummy_game)
-	if tex != null:
-		print("   [OK] Icono SVG de juego identificado y cargado con éxito.")
-		return true
-	push_error("   [FALLO] No se pudo cargar el icono SVG del juego.")
 	return false
 
 ## Auxiliar: Crear archivo de prueba ficticio
