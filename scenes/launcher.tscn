@@ -64,8 +64,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-horizontal_scroll_mode = 0
-vertical_scroll_mode = 2
 
 [node name="ScrollMargin" type="MarginContainer" parent="MainLayout/ContentArea/ScrollContainer" unique_id=909695496]
 layout_mode = 2

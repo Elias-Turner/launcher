@@ -5,13 +5,18 @@ extends Node
 ## garantizando que solo se ejecute un juego a la vez, optimizando recursos
 ## mientras el juego está activo y restaurando el foco del Lanzador al finalizar.
 
+# Señales que emite el GameLauncher
 signal juego_iniciado
 signal juego_finalizado(exit_code: int)
 signal lanzamiento_fallido(error_message: String)
 
+# Indica si actualmente hay un juego ejecutándose
 var _is_game_running: bool = false
+# PID del proceso del juego actual
 var _current_pid: int = 0
+# Información del juego actual
 var _current_game: Dictionary = {}
+# Timer para monitorear el estado del proceso del juego
 var _monitor_timer: Timer
 
 func _ready() -> void:
@@ -23,20 +28,30 @@ func _ready() -> void:
 	add_child(_monitor_timer)
 
 ## Indica si actualmente hay un juego ejecutándose
+# @params ninguno
+# @pre-condiciones: ninguna
+# @post-condiciones: retorna true si el juego está corriendo, false en caso contrario
 func is_running() -> bool:
 	return _is_game_running
 
 ## Retorna la información del juego actualmente en ejecución
+# @params ninguno
+# @pre-condiciones: ninguna
+# @post-condiciones: retorna la información del juego que se está ejecutando
 func get_current_game() -> Dictionary:
 	return _current_game
 
 ## Ejecuta el videojuego a partir de su información
+# @params game_info: diccionario con la información del juego
+# @pre-condiciones: el juego no debe estar corriendo
+# @post-condiciones: el juego se inicia y se monitorea su estado, las variables del lanzador se actualizan
 func launch_game(game_info: Dictionary) -> bool:
+	var salida := true
 	# 1. Prevención estricta de ejecuciones simultáneas
 	if _is_game_running:
 		var running_name = _current_game.get("name", "otro juego")
 		lanzamiento_fallido.emit("Ya hay un juego en ejecución (" + running_name + "). Esperá a que termine.")
-		return false
+		salida = false
 
 	var exe_path = game_info.get("executable_path", "").strip_edges().replace("/", "\\")
 	var game_name = game_info.get("name", "Juego desconocido")
@@ -45,11 +60,11 @@ func launch_game(game_info: Dictionary) -> bool:
 	# 2. Validaciones de archivo
 	if exe_path.is_empty():
 		lanzamiento_fallido.emit("No se ha especificado la ruta del ejecutable.")
-		return false
+		salida = false
 
 	if not FileAccess.file_exists(exe_path):
 		lanzamiento_fallido.emit("El archivo ejecutable '" + exe_path.get_file() + "' no existe o fue eliminado.")
-		return false
+		salida = false
 
 	print("Lanzador: Iniciando '" + game_name + "' -> " + exe_path)
 
@@ -68,7 +83,7 @@ func launch_game(game_info: Dictionary) -> bool:
 
 	if pid <= 0:
 		lanzamiento_fallido.emit("Error del sistema al crear el proceso para '" + game_name + "'.")
-		return false
+		salida = false
 
 	_is_game_running = true
 	_current_pid = pid
@@ -81,9 +96,12 @@ func launch_game(game_info: Dictionary) -> bool:
 	# 5. Iniciar monitoreo del proceso
 	_monitor_timer.start()
 	juego_iniciado.emit()
-	return true
+	return salida
 
-## Monitorea periódicamente el estado del proceso
+## Monitorea periódicamente el estado del proceso del juego
+# @params ninguno
+# @pre-condiciones: el timer debe estar corriendo
+# @post-condiciones: el timer se detiene si el proceso del juego termina
 func _on_monitor_timer_timeout() -> void:
 	if not _is_game_running or _current_pid <= 0:
 		_monitor_timer.stop()
