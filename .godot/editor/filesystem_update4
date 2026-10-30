@@ -1,6 +1,1 @@
-res://scripts/game_scanner.gd
 res://scenes/launcher.tscn
-res://scenes/game_card.tscn
-res://assets/styles/panel_style_box_flat.tres
-res://scripts/game_launcher.gd
-res://scripts/estado_vacio.gd
